@@ -16,6 +16,8 @@ if(!validator.isValidRequestBody(data)){
   return res.status(400).send({status:false,msg:"no review details given"})
 }
 
+
+
      data.bookId=req.params.bookId
      if(!validator.isValidObjectId(data.bookId))
     {
@@ -40,7 +42,7 @@ if(!validator.isValidRequestBody(data)){
     {
         data.reviewedBy="Guest"
     }
-    console.log(data.reviewedBy)
+    
     if(!validator.isValid(data.rating))
     {
 
@@ -66,11 +68,12 @@ if(!validator.isValidRequestBody(data)){
 
 
     let review=await reviewModel.create(data)
-    if(data.isDeleted==true) return  res.status(201).send({status:true,message:"Review created but data cannot be shown As review is already deleted"})
-    res.status(201).send({status:true,message:"sucessful",data:review})
-     
-
     
+    
+    const finalData=await reviewModel.findById(review._id).populate('bookId');
+        
+    res.status(201).send({status:true,message:"success",data:finalData})
+     
         
     } catch (error) {
       res.status(500).send({ status: false, msg: error.message });
@@ -81,24 +84,39 @@ if(!validator.isValidRequestBody(data)){
   const updatereview = async function (req, res) {
     try {
       let data = req.body;
-    //  console.log(data)
+     console.log(data)
+    let bookId=req.params.bookId
 
+    let reviewId=req.params.reviewId
       if(!validator.isValidRequestBody(data)){
 
         return res.status(400).send({status:false,msg:"no updatereview details given"})
       }
+      let x= Object.keys(data)
+
+for (let index = 0; index < x.length; index++) {
+if(x[index]!="rating")
+{ 
+ if(x[index]!="review"){
+   if(x[index]!="reviewedBy")
+   {
+     return res.status(400).send({status:false,message:"Invalid Parameter in body is being provided"})
+   }
+ }
+  
+}
+}
     
-     let bookId=req.params.bookId
+     
 
      if(!validator.isValidObjectId(bookId))
     {
 
         return res.status(400).send({status:false,msg:"bookId is not valid ObjectId"})
     }
-    //  console.log(bookId)
-     let reviewId=req.params.reviewId
-
-     if(!validator.isValidObjectId(data.reviewId))
+   
+  
+     if(!validator.isValidObjectId(reviewId))
     {
 
         return res.status(400).send({status:false,msg:"reviewId is not valid ObjectId"})
@@ -126,7 +144,7 @@ if(!validator.isValidRequestBody(data)){
         return res.status(400).send({status:false,message:"reviewdBy is not valid"})
     }
     
-
+     
     
     if(data.rating)
     
@@ -145,17 +163,20 @@ if(!validator.isValidRequestBody(data)){
    
    
     data.reviewedAt=Date.now()
-   
-  let update= await reviewModel.findOneAndUpdate(
-           {_id:reviewId,bookId:bookId},
+    let condition =await reviewModel.findOne({_id:reviewId,bookId:bookId,isDeleted:false})
+    if(!condition) return res.status(404).send({status:false,message:"No Document Found"})
+  
+    let update= await reviewModel.findByIdAndUpdate(
+           reviewId,
+            
            {
               $set: data
            },
            {new:true}
-      )
+      ).select({__v:0,isDeleted:0})
 
 
-
+console.log(update)
     
     res.status(200).send({status:true,message:"sucessful",data:update})
      
@@ -176,6 +197,21 @@ if(!validator.isValidRequestBody(data)){
     //  console.log(bookId)
      let reviewId=req.params.reviewId
 
+
+     if(!validator.isValidObjectId(bookId))
+     {
+ 
+         return res.status(400).send({status:false,msg:"bookId is not valid ObjectId"})
+     }
+     //  console.log(bookId)
+      
+ 
+      if(!validator.isValidObjectId(reviewId))
+     {
+ 
+         return res.status(400).send({status:false,msg:"reviewId is not valid ObjectId"})
+     }
+
      
      let search=await bookModel.findById(bookId)
     
@@ -190,7 +226,8 @@ if(!validator.isValidRequestBody(data)){
 
     if(reviewsearch.isDeleted==true) return res.status(404).send({status:false,message:"review is already deleted"})
 
-
+let condition =await reviewModel.findOne({_id:reviewId,bookId:bookId,isDeleted:false})
+if(!condition) return res.status(404).send({status:false,message:"No Document Found"})
     
     let update= await reviewModel.findOneAndUpdate(
       {_id:reviewId,bookId:bookId},
@@ -218,7 +255,7 @@ if(!validator.isValidRequestBody(data)){
       res.status(500).send({ status: false, msg: error.message });
     }
   };
-
+    
 
 
 

@@ -106,7 +106,7 @@ const login=async function(req,res){
     
         let data=await userModel.findOne({email:email,password:password})
         if(!data){
-            res.status(400).send({status:false,message:"Invalid login credentials"})
+            return res.status(400).send({status:false,message:"Invalid login credentials"})
         } 
         else{
             let token=jwt.sign({userId:data._id,batch:"uranium"},"Group-52", {expiresIn:"10h"})

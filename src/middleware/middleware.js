@@ -21,7 +21,9 @@ const auth1 = async function (req, res, next) {
   
     next();
   }catch(error){
-    res.status(403).send({status: false,message:"INVALID SIGNATURE"})
+    if(error.message=="invalid signature") return res.status(403).send({status:false,message:"Invalid signature"})
+    if(error.message=="jwt expired") return res.status(403).send({status:false,message:"Token Got expired"})
+    res.status(500).send({status: false,message:"INVALID SIGNATURE"})
   }}
 
 
