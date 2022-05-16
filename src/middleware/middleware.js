@@ -48,7 +48,7 @@ const auth1 = async function (req, res, next) {
                 next();
             }
             else{
-                return res.status(403).send({status:false,message:"cannot access other's account"})
+                return res.status(401).send({status:false,message:"Not authorized to perform Operation"})
 
         
             }}}
